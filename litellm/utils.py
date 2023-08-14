@@ -13,6 +13,7 @@ from .integrations.aispend import AISpendLogger
 from .integrations.berrispend import BerriSpendLogger
 from .integrations.supabase import Supabase
 from openai.error import AuthenticationError, InvalidRequestError, RateLimitError, ServiceUnavailableError, OpenAIError
+import logging
 ####### ENVIRONMENT VARIABLES ###################
 dotenv.load_dotenv() # Loading env variables using dotenv
 sentry_sdk_instance = None
@@ -131,6 +132,7 @@ def client(original_function):
           model = args[0] if len(args) > 0 else kwargs["model"]
           exception = kwargs["exception"] if "exception" in kwargs else None
           custom_llm_provider = kwargs["custom_llm_provider"] if "custom_llm_provider" in kwargs else None
+          logging.info(f"Logging Crash Reporting Details: model - {model} | exception - {exception} | custom_llm_provider - {custom_llm_provider}")
           safe_crash_reporting(model=model, exception=exception, custom_llm_provider=custom_llm_provider) # log usage-crash details. Do not log any user details. If you want to turn this off, set `litellm.telemetry=False`.
         except:
            #[Non-Blocking Error]
@@ -679,9 +681,10 @@ def litellm_telemetry(data):
           'data': data,
           'version': pkg_resources.get_distribution("litellm").version
       }
+      logging.info(f"litellm_telemetry: {payload}")
       # Make the POST request to litellm logging api
-      response = requests.post('https://litellm.berri.ai/logging', headers={"Content-Type": "application/json"}, json=payload)
-      response.raise_for_status()  # Raise an exception for HTTP errors
+      # response = requests.post('https://litellm.berri.ai.kryptogo.com/logging', headers={"Content-Type": "application/json"}, json=payload)
+      # response.raise_for_status()  # Raise an exception for HTTP errors
     except:
         # [Non-Blocking Error]
         return
